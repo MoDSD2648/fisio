@@ -1,0 +1,179 @@
+<?php
+session_start();
+
+$pagina_atual = 'espera';
+
+if (!isset($_SESSION['usuario_id'])) {
+    header("Location: index.php");
+    exit;
+}
+?>
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href=".\img\icon.ico">
+    <title>FISIOTERAPIA - UNIP</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/usuarios.css">
+    <link rel="stylesheet" href="styles/cadastrar.css">
+    
+  </head>
+  <body>
+    <header>
+      <div class="logo">
+        <img src="img/logoUnipHeader.png" alt="UNIP">
+        <h1>Lista de Espera</h1>
+      </div>
+      <?php include 'acesso.php';?>
+      <?php include 'menu.php';?>
+    </header>
+
+    <!-- Campo para pesquisa -->
+    <form method="POST" action="" class="form-pesquisa">
+      <div class="input-group mb-3" style="max-width: 400px;">
+        <!-- Campo de texto -->
+        <input type="text" name="texto" class="form-control" placeholder="Digite a pesquisa" value="<?php echo isset($_POST['texto']) ? htmlspecialchars($_POST['texto']) : ''; ?>" />
+        
+        <!-- Botão de pesquisa -->
+        <button type="submit" class="btn btn-primary">
+          <img src="img/lupa.png" alt="Pesquisar" style="width: 20px; height: 20px;" />
+        </button>
+        
+        <!-- Botão de voltar -->
+        <button type="button" class="btn btn-secondary" onclick="limparPesquisa();">
+          <img src="img/de-volta.png" alt="Voltar" style="width: 20px; height: 20px;" />
+        </button>
+        
+        <!-- Botão de atualizar -->
+        <button type="button" class="btn btn-success" onclick="window.location.reload();">
+          <img src="img/atualiza.png" alt="Atualizar" style="width: 20px; height: 20px;" />
+        </button>
+      </div>
+    </form>
+    <br><br>
+
+    <script>
+    // Função para limpar o campo de pesquisa e recarregar a tabela completa
+    function limparPesquisa() {
+    document.querySelector('input[name="texto"]').value = ''; // Limpa o campo de texto
+    document.querySelector('form').submit(); // Envia o formulário vazio para recarregar a tabela completa
+    }
+    </script>
+
+    <?php
+    require_once __DIR__ . '/../conexao.php'; // Inclui o arquivo de conexão com o banco de dados
+    require_once __DIR__ ."/Puxa_Pacientes.php";
+
+    $sql = "SELECT dataLigacao, nome, idade, telefone, observacoes, prioridade, status
+        FROM lista_espera 
+        WHERE status = \"aguardando\" 
+        ORDER BY prioridade ASC, CAST(dataLigacao AS DATE) ASC";  // Busca apenas pacientes ativos
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute();
+
+    if ($stmt->rowCount() > 0) {
+    echo '<table class="table table-striped">';
+    echo '<thead>
+            <tr>
+                <th scope="col">Data</th>
+                <th scope="col">Nome</th>
+                <th scope="col">Idade</th>
+                <th scope="col">Telefone</th>
+                <th scope="col">Observações</th>
+                <th scope="col">Prioridade</th>
+                <th scope="col">Status</th>
+                <th scope="col">Agendar</th>
+                <th scope="col">Editar</th>
+                <th scope="col">Remover</th>
+            </tr>
+          </thead>';
+    echo '<tbody>';
+    if(!isset($_POST['texto']))
+    {
+      while ($linha = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    
+        if(!isset($_POST['texto']))
+        {
+          echo "<tr>";
+          echo "  <td scope=\"row\">{$linha['dataLigacao']}</td>";
+          echo "  <td scope=\"row\">{$linha['nome']}</td>";
+          echo "  <td scope=\"row\">{$linha['idade']}</td>";
+          echo "  <td scope=\"row\">{$linha['telefone']}</td>";
+          echo "  <td scope=\"row\">{$linha['observacoes']}</td>";
+          
+          switch($linha['prioridade'])
+          {
+            case 0:
+            echo "  <td scope=\"row\">Alta</td>";
+            break;
+
+            case 1:
+              echo "  <td scope=\"row\">Média</td>";
+              break;
+
+            case 2:
+              echo "  <td scope=\"row\">Baixa</td>";
+              break;      
+          }
+
+          echo "  <td scope=\"row\">{$linha['status']}</td>";
+          echo "  <td scope=\"row\"><a href=\"cadastrarpaciente.php?name=".$linha["nome"]."||".$linha["telefone"]."\">Cadastrar</a></td>";
+          echo "  <td scope=\"row\"><a href=\"#\">Editar</a></td>";
+          echo "  <td scope=\"row\"><a href=\"#\">Remover</a></td>";
+          echo "</tr>";
+        }
+      }
+    }
+
+    else
+    {
+      while ($linha = $stmt->fetch(PDO::FETCH_ASSOC))
+
+      {
+        //verifica se a string contém parte da pesquisa, case-insensitive
+        if(str_contains(strtolower($linha['nome']), strtolower($_POST['texto'])))
+        {
+          echo "<tr>";
+          echo "  <td scope=\"row\">{$linha['dataLigacao']}</td>";
+          echo "  <td scope=\"row\">{$linha['nome']}</td>";
+          echo "  <td scope=\"row\">{$linha['idade']}</td>";
+          echo "  <td scope=\"row\">{$linha['telefone']}</td>";
+          echo "  <td scope=\"row\">{$linha['observacoes']}</td>";
+
+          switch($linha['prioridade'])
+          {
+            case 0:
+            echo "  <td scope=\"row\">Alta</td>";
+            break;
+
+            case 1:
+              echo "  <td scope=\"row\">Média</td>";
+              break;
+
+            case 2:
+              echo "  <td scope=\"row\">Baixa</td>";
+              break;      
+          }
+
+          echo "  <td scope=\"row\">{$linha['status']}</td>";
+          echo "  <td scope=\"row\"><a href=\"cadastrarpaciente.php\">Cadastrar</a></td>";
+          echo "  <td scope=\"row\"><a href=\"#\">Editar</a></td>";
+          echo "  <td scope=\"row\"><a href=\"#\">Remover</a></td>";
+          echo "</tr>";
+        }
+      }
+    }
+
+
+    echo '</tbody>';
+    echo '</table>';
+    } else {
+    echo "<h1>Nenhum usuário encontrado!</h1>";
+    }
+    ?>
+    </section>
+  </body>
+</html>

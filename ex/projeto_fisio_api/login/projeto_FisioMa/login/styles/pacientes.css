@@ -1,0 +1,223 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Rubik', sans-serif;
+  }
+  
+  body {
+    background: #f7f7f7;
+    padding-top: 130px; /* header + nav fixos */
+  }
+  
+  /* HEADER */
+  header {
+    background-color: #003366;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    z-index: 1000;
+  }
+  
+  .logo {
+    display: flex;
+    align-items: center;
+  }
+  
+  .logo img {
+    height: 30px;
+    margin-right: 25px;
+  }
+  
+  .user {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+  
+  .user-info {
+    text-align: right;
+    font-size: 0.9em;
+    color: #fff;
+  }
+  
+  .user-info strong {
+    display: block;
+  }
+
+  .nome-negrito {
+    font-weight: bold;
+}
+
+  .sair {
+    background-color: #dc3545;
+    color: white;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+  }
+  .menu {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+    background-color: #0056cc;
+    padding: 0 20px;
+    height: 40px;
+    align-items: center;
+    position: fixed;
+    top: 60px;
+    left: 0;
+    width: 100%;
+    z-index: 999;
+  }
+  
+  .menu > li {
+    position: relative;
+  }
+  
+  .menu a {
+    color: white;
+    text-decoration: none;
+    font-weight: normal;
+    padding: 5px 8px;
+    display: block;
+    transition: background-color 0.2s ease;
+    border-radius: 4px;
+  }
+  
+  .menu a:hover {
+    background-color: #003f99;
+  }
+  
+  .menu a.ativo {
+    font-weight: bold;
+    background-color: #004bbb;
+  }
+  
+  .submenu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: #0056cc;
+    list-style: none;
+    min-width: 200px;
+    border-radius: 0 0 4px 4px;
+    z-index: 998;
+  }
+  
+  .submenu li a {
+    padding: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .submenu li:last-child a {
+    border-bottom: none;
+  }
+  
+  .menu li:hover .submenu {
+    display: block;
+  }
+  
+  
+  /* MENU NAV */
+  nav {
+    background-color: #0056cc;
+    color: white;
+    display: flex;
+    padding: 10px 20px;
+    gap: 20px;
+    position: fixed;
+    top: 60px; /* abaixo do header */
+    left: 0;
+    width: 100%;
+    height: 40px;
+    align-items: center;
+    z-index: 999;
+  }
+  
+  nav a {
+    color: white;
+    text-decoration: none;
+    font-weight: normal;
+  }
+  nav a:hover {
+    color: #FFFAB4; /* cor de fundo ao passar o mouse */
+  }
+  
+  nav a.ativo {
+    font-weight: bold;
+  }
+  
+  /* BLOCO PRINCIPAL */
+.bloco-paciente {
+  max-width: 700px;
+  margin: 40px auto;
+  background-color: #fff;
+  padding: 25px 30px;
+  border-radius: 10px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* TOPO COM BUSCA E BOTÃO */
+.topo-paciente {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.busca-paciente {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1em;
+}
+
+.btn-cadastrar {
+  background-color: #0056cc;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.btn-cadastrar:hover {
+  background-color: #003f99;
+}
+
+/* LISTA DE PACIENTES */
+.lista-pacientes {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.lista-pacientes li {
+  padding: 12px 15px;
+  border-bottom: 1px solid #ddd;
+  font-size: 1.05em;
+  font-weight: 500;
+}
+
+.lista-pacientes li:last-child {
+  border-bottom: none;
+}
+
+  
+  
