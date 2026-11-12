@@ -1,37 +1,42 @@
 <?php
 require_once __DIR__ . '/../conexao.php';
 
-$login = $_POST['login'];
-$nome = $_POST['nome'];
-$email = $_POST['email'];
-$senha = $_POST['senha'];
-$telefone = $_POST['telefone'];
-$level = $_POST['level'];
-$idSetor = isset($_POST['setor']) ? $_POST['setor'] : null; // Verifica se o setor foi enviado
+$login = trim($_POST['login'] ?? '');
+$nome = trim($_POST['nome'] ?? '');
+$email = trim($_POST['email'] ?? '');
+$senha = $_POST['senha'] ?? '';
+$telefone = trim($_POST['telefone'] ?? '');
+$level = ucfirst(strtolower(trim($_POST['level'] ?? 'Aluno')));
+$idSetor = !empty($_POST['setor']) ? $_POST['setor'] : null;
 
-// Protege a senha
-$senhaHash = password_hash($senha, PASSWORD_DEFAULT);
-
-// Verifica se email já existe
-$stmt = $pdo->prepare("SELECT idUsuario FROM usuario WHERE email = ?");
-$stmt->execute([$email]);
-
-if ($stmt->rowCount() > 0) {
-    echo "<script>alert('Este email já está cadastrado!');window.location='cadastrarusuario.php';</script>";
+if (empty($login) || empty($nome) || empty($email) || empty($senha)) {
+    echo "<script>alert('Por favor, preencha todos os campos obrigatórios!');window.location='cadastrarusuario.php';</script>";
     exit;
 }
 
-// Insere o usuário na tabela `usuario`
-$stmt = $pdo->prepare("INSERT INTO usuario (login, nome, email, senha, telefone, level) VALUES (?, ?, ?, ?, ?, ?)");
-$stmt->execute([$login, $nome, $email, $senhaHash, $telefone, $level]);
+// Verifica se email ou login já existem
+$stmt = $pdo->prepare("SELECT idUsuario FROM usuario WHERE email = ? OR login = ?");
+$stmt->execute([$email, $login]);
 
-// Obtém o ID do usuário recém-criado
-$idUsuario = $pdo->lastInsertId();
-
-// Se o nível for "aluno", insere o relacionamento na tabela `usuario_setor`
-if ($level === 'aluno' && $idSetor) {
-    $stmt = $pdo->prepare("INSERT INTO usuario_setor (idUsuario, idSetor) VALUES (?, ?)");
-    $stmt->execute([$idUsuario, $idSetor]);
+if ($stmt->rowCount() > 0) {
+    echo "<script>alert('Este e-mail ou login já está cadastrado!');window.location='cadastrarusuario.php';</script>";
+    exit;
 }
 
-echo "<script>alert('Usuário cadastrado com sucesso!');window.location='tabela_Usuarios.php';</script>";
+$senhaHash = password_hash($senha, PASSWORD_DEFAULT);
+$apiKey = bin2hex(random_bytes(16));
+
+try {
+    $stmt = $pdo->prepare("INSERT INTO usuario (login, nome, email, senha, telefone, level, api_key, ativo) VALUES (?, ?, ?, ?, ?, ?, ?, 1)");
+    $stmt->execute([$login, $nome, $email, $senhaHash, $telefone, $level, $apiKey]);
+    $idUsuario = $pdo->lastInsertId();
+
+    if (strtolower($level) === 'aluno' && $idSetor) {
+        $stmtSetor = $pdo->prepare("INSERT INTO usuario_setor (idUsuario, idSetor) VALUES (?, ?)");
+        $stmtSetor->execute([$idUsuario, $idSetor]);
+    }
+
+    echo "<script>alert('Usuário cadastrado com sucesso!');window.location='tabela_Usuarios.php';</script>";
+} catch (Exception $e) {
+    echo "<script>alert('Erro ao cadastrar usuário: " . addslashes($e->getMessage()) . "');window.location='cadastrarusuario.php';</script>";
+}

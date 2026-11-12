@@ -1,31 +1,47 @@
 <?php
 require_once __DIR__ . '/../conexao.php';
 
-$data = $_POST['data'];
-$hora = $_POST['hora'];
-$idPaciente = $_POST['paciente'];
-$idUsuario = $_POST['usuario'];
-$idSetor = $_POST['setor'];
-$status = $_POST['status'];
-$observacoes = $_POST['observacoes'];
+$data = $_POST['data'] ?? '';
+$hora = $_POST['hora'] ?? '';
+$idPaciente = $_POST['paciente'] ?? null;
+$idUsuario = !empty($_POST['usuario']) ? $_POST['usuario'] : null;
+$idSetor = !empty($_POST['setor']) ? $_POST['setor'] : null;
+$status = $_POST['status'] ?? 'Marcada';
+$observacoes = $_POST['observacoes'] ?? '';
 
-// Verifica se a data, horário e setor está disponível
-$stmt = $pdo->prepare("SELECT idAgenda 
-FROM agenda 
-WHERE data = ? 
-AND hora = ? 
-AND idSetor = ?
-AND idPaciente =?");
-$stmt->execute([$data, $hora, $idSetor, $idPaciente]);
-
-if ($stmt->rowCount() > 0) {
-    //echo "<script>alert('Horário indisponível!');window.location='agendar.php';</script>";
-    echo "<script>alert('Horário indisponível!');window.location='agendar.php';</script>";
+if (empty($data) || empty($hora) || empty($idPaciente)) {
+    echo "<script>alert('Por favor, preencha todos os campos obrigatórios!');window.location='agendar.php';</script>";
     exit;
 }
 
-// Insere no banco
-$stmt = $pdo->prepare("INSERT INTO agenda (data, hora, idPaciente, idUsuario, status, observacoes) VALUES (?, ?, ?, ?, ?, ?)");
-$stmt->execute([$data, $hora, $idPaciente, $idUsuario, $status, $observacoes]);
+// Verifica se o paciente já possui agendamento no mesmo dia e horário
+$stmt = $pdo->prepare("SELECT idAgenda FROM agenda WHERE data = ? AND hora = ? AND idPaciente = ?");
+$stmt->execute([$data, $hora, $idPaciente]);
 
-echo "<script>alert('Agendado com sucesso!');window.location='painel.php';</script>";
+if ($stmt->rowCount() > 0) {
+    echo "<script>alert('Este paciente já possui agendamento neste mesmo dia e horário!');window.location='agendar.php';</script>";
+    exit;
+}
+
+// Verifica se a coluna idSetor existe na tabela agenda
+$temSetor = false;
+try {
+    $chk = $pdo->query("SHOW COLUMNS FROM agenda LIKE 'idSetor'");
+    if ($chk && $chk->rowCount() > 0) {
+        $temSetor = true;
+    }
+} catch (Exception $e) {}
+
+try {
+    if ($temSetor) {
+        $stmt = $pdo->prepare("INSERT INTO agenda (data, hora, idPaciente, idUsuario, idSetor, status, observacoes) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$data, $hora, $idPaciente, $idUsuario, $idSetor, $status, $observacoes]);
+    } else {
+        $stmt = $pdo->prepare("INSERT INTO agenda (data, hora, idPaciente, idUsuario, status, observacoes) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$data, $hora, $idPaciente, $idUsuario, $status, $observacoes]);
+    }
+
+    echo "<script>alert('Agendado com sucesso!');window.location='painel.php';</script>";
+} catch (Exception $e) {
+    echo "<script>alert('Erro ao salvar agendamento: " . addslashes($e->getMessage()) . "');window.location='agendar.php';</script>";
+}

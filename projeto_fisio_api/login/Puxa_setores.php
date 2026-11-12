@@ -1,9 +1,6 @@
 <?php
-    require_once __DIR__ . '/../conexao.php';
+require_once __DIR__ . '/../conexao.php';
 
-    // Puxa toda a tabela usuario
-    $stmt = $pdo->prepare("SELECT idSetor, nome FROM Setor");
-    $stmt->execute();
-
-
-?>
+// Puxa tabela setor
+$stmt = $pdo->prepare("SELECT idSetor, nome FROM setor ORDER BY nome");
+$stmt->execute();

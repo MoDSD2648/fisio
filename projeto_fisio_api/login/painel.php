@@ -10,21 +10,15 @@ if (!isset($_SESSION['usuario_id'])) {
 <html lang="pt-br">
 
 <head>
-    <javascript>
-    eventDidMount: function(info) {
-        console.log("Evento:", info.event.title);
-    },
-</javascript>
     <meta charset="UTF-8">
-    <link rel="icon" type="image/x-icon" href=".\img\icon.ico">
+    <link rel="icon" type="image/x-icon" href="img/icon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FISIOTERAPIA - UNIP</title>
-    <link href="https://fonts.googleapis.com/css2?family=Rubik&display=swap" rel="stylesheet">
+    <title>Agenda de Consultas - FISIOTERAPIA UNIP</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
     <link href='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css' rel='stylesheet'>
     <link rel="stylesheet" href="styles/painel.css">
     <link href="css/custom.css" rel="stylesheet">
-    <title>Agenda</title>
 </head>
 
 <body>
@@ -34,12 +28,31 @@ if (!isset($_SESSION['usuario_id'])) {
         <h1>Agenda de Consultas</h1>
     </div>
     <?php include 'acesso.php';?>
-    <?php include 'menu.php'; ?>
 </header>
-    <button class="agendar">
-        <a href="agendar.php">Agendar</a>
-    </button>
+<?php include 'menu.php'; ?>
+
+<main class="container-principal">
+    <div class="agenda-topo">
+        <div class="agenda-info">
+            <h2>Quadro de Atendimentos</h2>
+            <p>Selecione um horário vago na grade para agendar ou clique em um atendimento para gerenciar.</p>
+        </div>
+        <div class="agenda-acoes">
+            <a href="agendar.php" class="btn-novo-agendamento">
+                <i class="bi bi-calendar-plus"></i> Novo Agendamento
+            </a>
+        </div>
+    </div>
+
+    <div class="agenda-legenda">
+        <span class="item-legenda"><span class="bolinha bolinha-marcada"></span> Marcada</span>
+        <span class="item-legenda"><span class="bolinha bolinha-confirmada"></span> Confirmada</span>
+        <span class="item-legenda"><span class="bolinha bolinha-cancelada"></span> Cancelada / Faltou</span>
+        <span class="item-legenda"><span class="bolinha bolinha-intervalo"></span> Intervalo (15:10 - 15:30)</span>
+    </div>
+
     <div id='calendar'></div>
+</main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
     <script src='js/index.global.min.js'></script>
@@ -48,6 +61,5 @@ if (!isset($_SESSION['usuario_id'])) {
     <script src='js/custom.js'></script>
 
 </body>
-
 
 </html>

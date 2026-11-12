@@ -33,7 +33,8 @@ CREATE TABLE `agenda` (
   `hora` time NOT NULL,
   `idPaciente` int(11) DEFAULT NULL,
   `idUsuario` int(11) DEFAULT NULL,
-  `status` varchar(20) DEFAULT NULL CHECK (`status` in ('Marcada','Confirmada','Cancelada')),
+  `idSetor` int(11) DEFAULT NULL,
+  `status` varchar(20) DEFAULT NULL CHECK (`status` in ('Marcada','Confirmada','Cancelada','Agendado','Concluído','Faltou')),
   `observacoes` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 

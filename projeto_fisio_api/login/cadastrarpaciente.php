@@ -1,6 +1,8 @@
 <?php
 session_start();
 
+$pagina_atual = 'pacientes';
+
 if (!isset($_SESSION['usuario_id'])) {
     header("Location: index.php");
     exit;
@@ -11,8 +13,10 @@ if (!isset($_SESSION['usuario_id'])) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/x-icon" href="img/icon.ico">
   <title>Cadastrar Paciente - UNIP</title>
-  <link href="https://fonts.googleapis.com/css2?family=Rubik&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/painel.css">
   <link rel="stylesheet" href="styles/cadastrarPaciente.css">
 </head>
 <body>
@@ -22,8 +26,8 @@ if (!isset($_SESSION['usuario_id'])) {
       <h1>Cadastrar novo paciente</h1>
     </div>
     <?php include 'acesso.php';?>
-    <?php include 'menu.php'; ?>
   </header>
+  <?php include 'menu.php'; ?>
 
   <section class="conteudo-vazio">
     <form class="form-cadastro" action="salvar_paciente.php" method="POST">
@@ -41,31 +45,24 @@ if (!isset($_SESSION['usuario_id'])) {
       <label for="telefone">Telefone</label>
       <input type="tel" id="telefone" name="telefone" placeholder="(00) 00000-0000">
 
-      <label for="endereco">Endereco</label>
-      <input type="text" id="endereco" name="endereco">
+      <label for="endereco">Endereço</label>
+      <input type="text" id="endereco" name="endereco" placeholder="Rua, número, bairro">
 
-      <button type="submit">Salvar Paciente</button>
+      <div style="display: flex; gap: 10px; margin-top: 15px;">
+        <button type="submit" style="flex: 1;">Salvar Paciente</button>
+        <a href="tabela_Pacientes.php" style="display: inline-block; padding: 10px 15px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px; text-align: center;">Voltar</a>
+      </div>
     </form>
 
     <script>
-
-        // Get the query string from the URL
         var params = new URLSearchParams(window.location.search);
-  
-        // Retrieve the value of the 'value' parameter
         var value = params.get('name');
-        var entrada = value.split("||");
-  
-        document.getElementById("nome").value = entrada[0];
-        console.log(entrada[0]);
-        document.getElementById("telefone").value = entrada[1];
-        console.log(entrada[1]);
-
-        //console.log(value); // Outputs: 123
-      
+        if (value) {
+            var entrada = value.split("||");
+            if (entrada[0]) document.getElementById("nome").value = entrada[0];
+            if (entrada[1]) document.getElementById("telefone").value = entrada[1];
+        }
     </script>
-
-
   </section>
 </body>
 </html>

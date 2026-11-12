@@ -1,30 +1,31 @@
 <?php
 require_once __DIR__ . '/../conexao.php';
-//isso é uma api?! entao vamos ter que colocar na pasta API
-$nome = $_POST['nome'];
-$cpf = $_POST['cpf'];
-$dataNascimento = $_POST['nascimento'];
-$telefone = $_POST['telefone'];
-$endereco = $_POST['endereco'];
 
-// Protege a senha
-//$senhaHash = password_hash($senha, PASSWORD_DEFAULT);
+$nome = trim($_POST['nome'] ?? '');
+$cpf = trim($_POST['cpf'] ?? '');
+$dataNascimento = $_POST['nascimento'] ?? null;
+$telefone = trim($_POST['telefone'] ?? '');
+$endereco = trim($_POST['endereco'] ?? '');
 
-// Gera a API Key automaticamente
-//$apiKey = bin2hex(random_bytes(32));
-
-// Verifica se email já existe
-$stmt = $pdo->prepare("SELECT idPaciente FROM paciente WHERE nome = ?");
-$stmt->execute([$nome]);
-
-if ($stmt->rowCount() > 0) {
-    echo "<script>alert('Este paciente já está cadastrado!');window.location='cadastrar.php';</script>";
+if (empty($nome) || empty($cpf) || empty($dataNascimento)) {
+    echo "<script>alert('Por favor, preencha todos os campos obrigatórios!');window.location='cadastrarpaciente.php';</script>";
     exit;
 }
 
-// Insere no banco
+// Verifica se CPF já existe entre os pacientes ativos
+$stmt = $pdo->prepare("SELECT idPaciente FROM paciente WHERE cpfPaciente = ? AND ativo = 1");
+$stmt->execute([$cpf]);
 
-$stmt = $pdo->prepare("INSERT INTO paciente (nome, cpfPaciente, dataNascimento, telefone, endereco) VALUES (?, ?, ?, ?, ?)");
-$stmt->execute([$nome, $cpf, $dataNascimento, $telefone, $endereco]);
+if ($stmt->rowCount() > 0) {
+    echo "<script>alert('Este CPF já está cadastrado para outro paciente!');window.location='cadastrarpaciente.php';</script>";
+    exit;
+}
 
-echo "<script>alert('Paciente cadastrado com sucesso!');window.location='tabela_Usuarios.php';</script>";
+try {
+    $stmt = $pdo->prepare("INSERT INTO paciente (nome, cpfPaciente, dataNascimento, telefone, endereco, faltas, ativo) VALUES (?, ?, ?, ?, ?, 0, 1)");
+    $stmt->execute([$nome, $cpf, $dataNascimento, $telefone, $endereco]);
+
+    echo "<script>alert('Paciente cadastrado com sucesso!');window.location='tabela_Pacientes.php';</script>";
+} catch (Exception $e) {
+    echo "<script>alert('Erro ao cadastrar paciente: " . addslashes($e->getMessage()) . "');window.location='cadastrarpaciente.php';</script>";
+}

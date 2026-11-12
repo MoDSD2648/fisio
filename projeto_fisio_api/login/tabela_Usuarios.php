@@ -1,136 +1,142 @@
 <?php
-$pagina_atual='usuarios';
 session_start();
+$pagina_atual = 'usuarios';
 
 if (!isset($_SESSION['usuario_id'])) {
     header("Location: index.php");
     exit;
 }
-if($_SESSION['usuario_level'] == "aluno")
-{
-  header("Location: painel.php");
-  exit;
-}
 
+if (strtolower($_SESSION['usuario_level'] ?? '') === "aluno") {
+    header("Location: painel.php");
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/x-icon" href=".\img\icon.ico">
-    <title>FISIOTERAPIA - UNIP</title>
-    <link href="https://fonts.googleapis.com/css2?family=Rubik&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles/cadastrar.css">
+    <link rel="icon" type="image/x-icon" href="img/icon.ico">
+    <title>Usuários - FISIOTERAPIA UNIP</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css' rel='stylesheet'>
+    <link rel="stylesheet" href="styles/painel.css">
     <link rel="stylesheet" href="styles/usuarios.css">
-    
   </head>
   <body>
     <header>
       <div class="logo">
         <img src="img/logoUnipHeader.png" alt="UNIP">
-        <h1>Usuários</h1>
+        <h1>Usuários do Sistema</h1>
       </div>
       <?php include 'acesso.php';?>
-      <?php include 'menu.php'; ?>
     </header>
-    <!-- Campo para pesquisa -->
-    <form method="POST" action="" class="form-pesquisa">
-      <div class="input-group mb-3" style="max-width: 400px;">
-        <!-- Campo de texto -->
-        <input type="text" name="texto" class="form-control" placeholder="Digite a pesquisa" value="<?php echo isset($_POST['texto']) ? htmlspecialchars($_POST['texto']) : ''; ?>" />
-        
-        <!-- Botão de pesquisa -->
-        <button type="submit" class="btn btn-primary">
-          <img src="img/lupa.png" alt="Pesquisar" style="width: 20px; height: 20px;" />
-        </button>
-        
-        <!-- Botão de voltar -->
-        <button type="button" class="btn btn-secondary" onclick="limparPesquisa();">
-          <img src="img/de-volta.png" alt="Voltar" style="width: 20px; height: 20px;" />
-        </button>
-        
-        <!-- Botão de atualizar -->
-        <button type="button" class="btn btn-success" onclick="window.location.reload();">
-          <img src="img/atualiza.png" alt="Atualizar" style="width: 20px; height: 20px;" />
-        </button>
+    <?php include 'menu.php'; ?>
+
+    <main class="container-principal">
+      <div class="agenda-topo">
+        <div class="agenda-info">
+          <h2>Controle de Acessos e Usuários</h2>
+          <p>Gerencie professores, alunos, profissionais e administradores do sistema.</p>
+        </div>
+        <div class="agenda-acoes">
+          <a href="cadastrarusuario.php" class="btn-novo-agendamento">
+            <i class="bi bi-person-plus"></i> Novo Usuário
+          </a>
+        </div>
       </div>
-    </form>
-    <br><br>
 
-    <script>
-    // Função para limpar o campo de pesquisa e recarregar a tabela completa
-    function limparPesquisa() {
-    document.querySelector('input[name="texto"]').value = ''; // Limpa o campo de texto
-    document.querySelector('form').submit(); // Envia o formulário vazio para recarregar a tabela completa
-    }
-    </script>
-    <?php
-    require_once __DIR__ . '/../conexao.php'; // Inclui o arquivo de conexão com o banco de dados
-
-    $sql = "SELECT login, nome, email, telefone, level
-        FROM usuario
-        WHERE ativo = 1"; // Busca apenas pacientes ativos
-
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute();
-
-    if ($stmt->rowCount() > 0) {
-      echo '<table class="table table-striped">';
-      echo '<thead>
-              <tr>
-                  <th scope="col">Login</th>
-                  <th scope="col">Nome</th>
-                  <th scope="col">Email</th>
-                  <th scope="col">Telefone</th>
-                  <th scope="col">Level</th>
-                  <th scope="col">Editar</th>
-                  <th scope="col">Remover</th>
-              </tr>
-            </thead>';
-      echo '<tbody>';
-
-      if (!isset($_POST['texto'])) {
-        while ($linha = $stmt->fetch(PDO::FETCH_ASSOC)) {
-          echo "<tr>";
-          echo "  <td scope=\"row\">{$linha['login']}</td>";
-          echo "  <td scope=\"row\">{$linha['nome']}</td>";
-          echo "  <td scope=\"row\">{$linha['email']}</td>";
-          echo "  <td scope=\"row\">{$linha['telefone']}</td>";
-          echo "  <td scope=\"row\">{$linha['level']}</td>";
-          echo "  <td scope=\"row\"><a href=\"#\">Editar</a></td>";
-          echo "  <td scope=\"row\"><a href=\"#\">Remover</a></td>";
-          echo "</tr>";
+      <!-- Campo para pesquisa -->
+      <form method="POST" action="" class="form-pesquisa mb-4">
+        <div class="input-group" style="max-width: 480px;">
+          <input type="text" name="texto" class="form-control" placeholder="Buscar por nome, login ou email..." value="<?php echo isset($_POST['texto']) ? htmlspecialchars($_POST['texto']) : ''; ?>" />
           
-        }
+          <button type="submit" class="btn btn-primary" title="Pesquisar">
+            <i class="bi bi-search"></i> Pesquisar
+          </button>
+          
+          <button type="button" class="btn btn-secondary" onclick="limparPesquisa();" title="Limpar pesquisa">
+            <i class="bi bi-x-circle"></i>
+          </button>
+        </div>
+      </form>
 
-        echo '</tbody>';
-        echo '</table>';
-      } 
-
-      else
-      {
-        while ($linha = $stmt->fetch(PDO::FETCH_ASSOC))
-
-        {
-          //verifica se a string contém parte da pesquisa, case-insensitive
-          if(str_contains(strtolower($linha['nome']), strtolower($_POST['texto'])))
-          {
-            echo "<tr>";
-            echo "  <td scope=\"row\">{$linha['login']}</td>";
-            echo "  <td scope=\"row\">{$linha['nome']}</td>";
-            echo "  <td scope=\"row\">{$linha['email']}</td>";
-            echo "  <td scope=\"row\">{$linha['telefone']}</td>";
-            echo "  <td scope=\"row\">{$linha['level']}</td>";
-            echo "  <td scope=\"row\"><a href=\"#\">Editar</a></td>";
-            echo "  <td scope=\"row\"><a href=\"#\">Remover</a></td>";
-            echo "</tr>";
-          }
-        }
+      <script>
+      function limparPesquisa() {
+          document.querySelector('input[name="texto"]').value = '';
+          document.querySelector('.form-pesquisa').submit();
       }
-    }
-    ?>
-    </section>
-    
+      </script>
+
+      <?php
+      require_once __DIR__ . '/../conexao.php';
+
+      $termo = trim($_POST['texto'] ?? '');
+      if ($termo !== '') {
+          $sql = "SELECT idUsuario, login, nome, email, telefone, level
+                  FROM usuario
+                  WHERE ativo = 1 AND (nome LIKE :termo OR login LIKE :termo OR email LIKE :termo)
+                  ORDER BY nome ASC";
+          $stmt = $pdo->prepare($sql);
+          $stmt->execute([':termo' => "%$termo%"]);
+      } else {
+          $sql = "SELECT idUsuario, login, nome, email, telefone, level
+                  FROM usuario
+                  WHERE ativo = 1
+                  ORDER BY nome ASC";
+          $stmt = $pdo->prepare($sql);
+          $stmt->execute();
+      }
+
+      $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+      if (count($usuarios) > 0) {
+          echo '<div class="table-responsive bg-white p-3 rounded shadow-sm">';
+          echo '<table class="table table-striped table-hover align-middle mb-0">';
+          echo '<thead class="table-light">
+                  <tr>
+                      <th scope="col">Login (RA)</th>
+                      <th scope="col">Nome</th>
+                      <th scope="col">Email</th>
+                      <th scope="col">Telefone</th>
+                      <th scope="col" class="text-center">Nível</th>
+                      <th scope="col" class="text-center">Ações</th>
+                  </tr>
+                </thead>';
+          echo '<tbody>';
+
+          foreach ($usuarios as $linha) {
+              $badgeLevel = 'bg-secondary';
+              $lvl = strtolower($linha['level']);
+              if ($lvl === 'admin') $badgeLevel = 'bg-danger';
+              elseif ($lvl === 'professor') $badgeLevel = 'bg-primary';
+              elseif ($lvl === 'profissional') $badgeLevel = 'bg-info text-dark';
+              elseif ($lvl === 'aluno') $badgeLevel = 'bg-success';
+
+              echo "<tr>";
+              echo "  <td class='fw-medium'>" . htmlspecialchars($linha['login']) . "</td>";
+              echo "  <td>" . htmlspecialchars($linha['nome']) . "</td>";
+              echo "  <td>" . htmlspecialchars($linha['email']) . "</td>";
+              echo "  <td>" . htmlspecialchars($linha['telefone'] ?? '-') . "</td>";
+              echo "  <td class='text-center'><span class='badge {$badgeLevel}'>" . htmlspecialchars($linha['level']) . "</span></td>";
+              echo "  <td class='text-center'>";
+              if ($linha['idUsuario'] != $_SESSION['usuario_id']) {
+                  echo "    <a href='remover_usuario.php?id={$linha['idUsuario']}' class='btn btn-sm btn-outline-danger' onclick=\"return confirm('Deseja realmente desativar este usuário?');\" title='Remover'><i class='bi bi-trash'></i> Desativar</a>";
+              } else {
+                  echo "    <span class='text-muted small'>Usuário Atual</span>";
+              }
+              echo "  </td>";
+              echo "</tr>";
+          }
+          echo '</tbody>';
+          echo '</table>';
+          echo '</div>';
+      } else {
+          echo "<div class='alert alert-warning'>Nenhum usuário encontrado.</div>";
+      }
+      ?>
+    </main>
   </body>
 </html>

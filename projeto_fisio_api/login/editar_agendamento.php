@@ -5,6 +5,7 @@ if (!isset($_SESSION['usuario_id'])) {
     exit;
 }
 
+$pagina_atual = 'painel';
 require_once __DIR__ . '/../conexao.php';
 
 // Obtém o ID do agendamento pela URL
@@ -15,11 +16,33 @@ if (!$idAgenda) {
     exit;
 }
 
-// Busca os dados do agendamento no banco de dados
-$stmt = $pdo->prepare("SELECT a.id, a.data, a.hora, a.status, a.observacoes, p.nome AS paciente_nome, p.idPaciente 
-                       FROM agendamento a 
-                       INNER JOIN paciente p ON a.idPaciente = p.idPaciente 
-                       WHERE a.id = ?");
+// Verifica se a tabela agenda possui idSetor
+$temSetor = false;
+try {
+    $chk = $pdo->query("SHOW COLUMNS FROM agenda LIKE 'idSetor'");
+    if ($chk && $chk->rowCount() > 0) {
+        $temSetor = true;
+    }
+} catch (Exception $e) {}
+
+// Busca os dados do agendamento
+$query = "
+SELECT 
+    a.idAgenda, 
+    a.data, 
+    a.hora, 
+    a.status, 
+    a.observacoes, 
+    a.idPaciente,
+    COALESCE(p.nome, 'Paciente não informado') AS paciente_nome,
+    " . ($temSetor ? "COALESCE(s.nome, 'Não informado') AS setor_nome" : "'Fisioterapia' AS setor_nome") . "
+FROM agenda a 
+LEFT JOIN paciente p ON a.idPaciente = p.idPaciente 
+" . ($temSetor ? "LEFT JOIN setor s ON a.idSetor = s.idSetor " : "") . "
+WHERE a.idAgenda = ?
+";
+
+$stmt = $pdo->prepare($query);
 $stmt->execute([$idAgenda]);
 $agenda = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -28,33 +51,31 @@ if (!$agenda) {
     exit;
 }
 
-// Atualiza o status do agendamento e incrementa as faltas do paciente
+// Atualiza o agendamento
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $status = $_POST['status'];
-    $observacoes = $_POST['observacoes'];
+    $status = $_POST['status'] ?? $agenda['status'];
+    $observacoes = $_POST['observacoes'] ?? '';
 
     try {
-        // Inicia uma transação
         $pdo->beginTransaction();
 
-        // Atualiza o status do agendamento
-        $stmt = $pdo->prepare("UPDATE agendamento SET status = ?, observacoes = ? WHERE id = ?");
+        $stmt = $pdo->prepare("UPDATE agenda SET status = ?, observacoes = ? WHERE idAgenda = ?");
         $stmt->execute([$status, $observacoes, $idAgenda]);
 
         // Se o status for "Faltou", incrementa as faltas do paciente
-        if ($status === 'Faltou') {
-            $stmt = $pdo->prepare("UPDATE paciente SET faltas = faltas + 1 WHERE idPaciente = ?");
-            $stmt->execute([$agenda['idPaciente']]);
+        if ($status === 'Faltou' && !empty($agenda['idPaciente'])) {
+            $stmtFalta = $pdo->prepare("UPDATE paciente SET faltas = faltas + 1 WHERE idPaciente = ?");
+            $stmtFalta->execute([$agenda['idPaciente']]);
         }
 
-        // Confirma a transação
         $pdo->commit();
-
         echo "<script>alert('Agendamento atualizado com sucesso!');window.location='painel.php';</script>";
+        exit;
     } catch (Exception $e) {
-        // Reverte a transação em caso de erro
-        $pdo->rollBack();
-        echo "<script>alert('Erro ao atualizar agendamento: {$e->getMessage()}');</script>";
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        echo "<script>alert('Erro ao atualizar agendamento: " . addslashes($e->getMessage()) . "');</script>";
     }
 }
 ?>
@@ -64,8 +85,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editar Agendamento</title>
-    <link href="https://fonts.googleapis.com/css2?family=Rubik&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="img/icon.ico">
+    <title>Editar Agendamento - FISIOTERAPIA UNIP</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/painel.css">
     <link rel="stylesheet" href="styles/cadastrar.css">
 </head>
 <body>
@@ -74,34 +97,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <img src="img/logoUnipHeader.png" alt="UNIP">
             <h1>Editar Agendamento</h1>
         </div>
-        <?php include 'menu.php'; ?>
+        <?php include 'acesso.php';?>
     </header>
+    <?php include 'menu.php'; ?>
 
     <section class="conteudo-vazio">
         <form class="form-cadastro" method="POST">
-            <h2>Editar Agendamento</h2>
+            <h2>Detalhes da Consulta</h2>
 
             <label for="paciente">Paciente:</label>
-            <input type="text" id="paciente" name="paciente" value="<?= $agendamento['paciente_nome'] ?>" readonly>
+            <input type="text" id="paciente" name="paciente" value="<?= htmlspecialchars($agenda['paciente_nome']) ?>" readonly>
+
+            <label for="setor">Setor:</label>
+            <input type="text" id="setor" name="setor" value="<?= htmlspecialchars($agenda['setor_nome']) ?>" readonly>
 
             <label for="data">Data:</label>
-            <input type="date" id="data" name="data" value="<?= $agendamento['data'] ?>" readonly>
+            <input type="date" id="data" name="data" value="<?= htmlspecialchars($agenda['data']) ?>" readonly>
 
             <label for="hora">Hora:</label>
-            <input type="time" id="hora" name="hora" value="<?= $agendamento['hora'] ?>" readonly>
+            <input type="time" id="hora" name="hora" value="<?= htmlspecialchars($agenda['hora']) ?>" readonly>
 
             <label for="status">Status:</label>
             <select id="status" name="status" required>
-                <option value="Agendado" <?= $agendamento['status'] === 'Agendado' ? 'selected' : '' ?>>Agendado</option>
-                <option value="Concluído" <?= $agendamento['status'] === 'Concluído' ? 'selected' : '' ?>>Concluído</option>
-                <option value="Faltou" <?= $agendamento['status'] === 'Faltou' ? 'selected' : '' ?>>Faltou</option>
+                <option value="Marcada" <?= $agenda['status'] === 'Marcada' ? 'selected' : '' ?>>Marcada</option>
+                <option value="Confirmada" <?= $agenda['status'] === 'Confirmada' ? 'selected' : '' ?>>Confirmada</option>
+                <option value="Cancelada" <?= $agenda['status'] === 'Cancelada' ? 'selected' : '' ?>>Cancelada</option>
+                <option value="Faltou" <?= $agenda['status'] === 'Faltou' ? 'selected' : '' ?>>Faltou</option>
             </select>
 
             <label for="observacoes">Observações:</label>
-            <textarea id="observacoes" name="observacoes"><?= $agendamento['observacoes'] ?></textarea>
+            <textarea id="observacoes" name="observacoes" rows="4"><?= htmlspecialchars($agenda['observacoes'] ?? '') ?></textarea>
 
-            <button type="submit">Salvar Alterações</button>
-            <a href="painel.php" class="btn btn-secondary">Voltar</a>
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button type="submit" style="flex: 1;">Salvar Alterações</button>
+                <a href="painel.php" class="btn btn-secondary" style="display: inline-block; padding: 10px 15px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px; text-align: center;">Voltar</a>
+            </div>
         </form>
     </section>
 </body>

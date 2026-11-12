@@ -32,14 +32,11 @@
   
   <?php
     if (!isset($_SESSION['usuario_id'])) {
-    header("Location: index.php");
-    exit;
+      header("Location: index.php");
+      exit;
     }
 
-    //$level = $_SESSION['usuario_level'];
-
-    if($_SESSION['usuario_level'] != "aluno")
-    {
+    if (strtolower($_SESSION['usuario_level'] ?? '') !== "aluno") {
       echo "<li>";
       echo "<a href=\"tabela_Usuarios.php\" class=\"";
       echo ($pagina_atual == 'usuarios') ? 'ativo' : '';
@@ -51,20 +48,5 @@
       echo "</li>";
     }
   ?>
-
-  <!--
-  <li>
-    <a href="tabela_Usuarios.php" class="<?php echo ($pagina_atual == 'usuarios') ? 'ativo' : ''; ?>">4. Usuários</a>
-    <ul class="submenu">
-      <li><a href="cadastrarusuario.php">Novo Usuário</a></li>
-    </ul>
-  </li>
 </ul>
 </nav>
-  <li><a href="#">5. Configurações</a>
-    <ul class="submenu">
-      <li><a href="#">Sistema</a></li>
-      <li><a href="#">Backup</a></li>
-      <li><a href="#">Preferências</a></li>
-    </ul>
-  </li>-->

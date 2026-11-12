@@ -1,19 +1,27 @@
 <?php
-// Define o cabeçalho da resposta como JSON
-header('Content-Type: application/json');
+header('Content-Type: application/json; charset=utf-8');
 
-// Inclui o arquivo de conexão
-require_once '../fullcalendar-com-bootstrap5/conexao.php';
+require_once __DIR__ . '/../fullcalendar-com-bootstrap5/conexao.php';
 
 try {
-    // Executa a consulta SQL para buscar os eventos
-    $stmt = $conn->query("SELECT idAgenda, titulo, data, hora, idProntuario, idUsuario, status, observacoes FROM agenda"); // Seleciona os campos necessários da tabela 'events'
-    $events = $stmt->fetchAll(PDO::FETCH_ASSOC); // Obtém os resultados como um array associativo
+    $stmt = $conn->query("
+        SELECT 
+            a.idAgenda, 
+            a.data, 
+            a.hora, 
+            a.idPaciente, 
+            a.idUsuario, 
+            a.status, 
+            a.observacoes,
+            p.nome AS paciente_nome
+        FROM agenda a
+        LEFT JOIN paciente p ON a.idPaciente = p.idPaciente
+        ORDER BY a.data DESC, a.hora ASC
+    ");
+    $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Retorna os eventos no formato JSON
     echo json_encode($events);
 } catch (PDOException $e) {
-    // Em caso de erro, retorna uma mensagem de erro no formato JSON
+    http_response_code(500);
     echo json_encode(['error' => $e->getMessage()]);
 }
-?>
